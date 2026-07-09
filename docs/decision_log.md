@@ -35,3 +35,20 @@
 - Stopped reading at `!series_matrix_table_begin`; expression tables were not read.
 - No labels confirmed.
 - No processed matrices, probe mapping, gene intersection, or modeling performed.
+
+## 2026-07-10 — Phase 1 step 3 metadata-only label extraction
+
+- GSE6613 exclusion rule was defined before reading expression values.
+- No expression table read.
+- No modeling.
+- No processed matrices created.
+
+## 2026-07-10 — Phase 1 GSE99039 label-rule correction
+
+- Corrected GSE99039 metadata-only label rules to match the roadmap primary task: IPD vs CONTROL only.
+- GPD and GENETIC_UNAFFECTED are excluded from primary development training.
+- DRD, DRD-DYT5, and ATYPICAL_PD are excluded from the held-out NDD probe.
+- Held-out NDD is defined as HD, HD_HD_BATCH, MSA, PSP, CBD, PD_DEMENTIA, and Vascular dementia.
+- No expression table read.
+- No modeling.
+- No processed matrices created.
