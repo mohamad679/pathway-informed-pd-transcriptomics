@@ -28,3 +28,10 @@
 - No labels parsed.
 - No expression-driven feature selection performed.
 - External cohort downloaded/cache-prepared only; not used for modeling or feature selection.
+
+## 2026-07-10 — Phase 1 step 2 metadata-only verification
+
+- Verified cached GSE99039 and GSE6613 GEO series-matrix metadata headers only.
+- Stopped reading at `!series_matrix_table_begin`; expression tables were not read.
+- No labels confirmed.
+- No processed matrices, probe mapping, gene intersection, or modeling performed.

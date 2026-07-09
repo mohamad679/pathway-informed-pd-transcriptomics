@@ -26,3 +26,8 @@ It records raw GEO series-matrix downloads only.
 - No probe-to-symbol mapping performed.
 - No gene-space intersection performed.
 - External cohort downloaded and cache-prepared only.
+
+## Metadata Verification
+
+- Metadata-only verification report: `docs/metadata_verification.md`
+- Verification stops at `!series_matrix_table_begin`; expression tables are not read.
