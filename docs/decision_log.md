@@ -52,3 +52,10 @@
 - No expression table read.
 - No modeling.
 - No processed matrices created.
+
+## 2026-07-10 — Phase 1 platform annotation acquisition
+
+- Downloaded or reused cached GEO platform annotation files for `GPL570` and `GPL96`.
+- Parsed platform annotation metadata only to build probe-to-symbol tables.
+- No GEO series expression matrix was read.
+- No labels, splits, processed expression matrices, or modeling artifacts were created.
