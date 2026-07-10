@@ -66,3 +66,13 @@
 - No GEO series expression matrix was read.
 - No numeric expression values were parsed.
 - No labels, splits, processed expression matrices, or modeling artifacts were created.
+
+## 2026-07-10 — Phase 1 processed matrix creation
+
+- Parsed cached GEO series-matrix expression tables only between `!series_matrix_table_begin` and `!series_matrix_table_end`.
+- Fixed the shared gene space from the existing annotation-only intersection file before reading external-cohort expression values.
+- Mapped probes to genes using cached platform annotation tables only and aggregated multiple probes per gene by median.
+- Applied metadata-only labels from `src/data/labels.py`.
+- Applied within-sample gene-wise z-scoring only; no train-fitted scaler was used.
+- No train/validation/test splits, pathway masks, MSigDB logic, baselines, or modeling artifacts were created.
+- External expression values were not used for gene selection, probe selection, fitting, ranking, scaling, or imputation.
