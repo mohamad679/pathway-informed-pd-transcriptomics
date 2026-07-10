@@ -1,0 +1,33 @@
+{
+  "bootstrap_seed": 20260710,
+  "brier": 0.24999234182547456,
+  "ece": 0.15434030497500661,
+  "empirical_p_value": 0.3333333333333333,
+  "external_or_ndd_used": false,
+  "fast_smoke": true,
+  "final_validation": false,
+  "inputs": [
+    "data/processed/dev_X.npy",
+    "data/processed/dev_y.npy",
+    "data/processed/dev_folds.json",
+    "data/processed/pathway_mask.npz",
+    "results/development/binn_oof_predictions.csv"
+  ],
+  "model_frozen": false,
+  "n_bootstrap": 50,
+  "n_calibration_bins": 15,
+  "n_permutations": 2,
+  "n_samples": 1314,
+  "null_auroc_mean": 0.5383183874757203,
+  "null_auroc_std": 0.008006792514277161,
+  "observed_auroc": 0.7028949602800749,
+  "permutation_seed": 20260710,
+  "phase": 5,
+  "scope": "development-only",
+  "training_kwargs": {
+    "batch_size": 64,
+    "hidden_dim": 16,
+    "max_epochs": 2,
+    "patience": 1
+  }
+}

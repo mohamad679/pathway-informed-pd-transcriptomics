@@ -193,3 +193,10 @@
 - No training/retraining, activation attribution, Integrated Gradients attribution, final validation, attention, or permutation testing was run inside this gate.
 - No external cohort or held-out NDD data was used.
 - This is development-only artifact integrity auditing, not a biological claim and not final performance.
+
+## 2026-07-10 - Phase 5 development-only statistical validation
+
+- Ran a configurable development-only calibration, bootstrap CI, and label-permutation foundation.
+- Label permutations shuffled labels only within development data and reused the predefined development folds.
+- No external cohort or held-out NDD data was loaded or used; this is not final validation and does not freeze a model.
+- Run mode: fast smoke only, not the final Phase 5 result; permutations=2; bootstrap=50.
