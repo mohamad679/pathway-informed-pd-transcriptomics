@@ -1,0 +1,16 @@
+{
+  "auprc": 0.7820807603992959,
+  "auroc": 0.6954545454545455,
+  "balanced_accuracy": 0.5,
+  "brier": 0.6944439246508343,
+  "ece": 0.6944412781278375,
+  "external_scored_once": true,
+  "frozen_commit": "6b150f8f64935e3bbd4b7bb64a5ec59e665a7f22",
+  "frozen_tag": "frozen-v1",
+  "hash_before_verified": true,
+  "model_frozen": true,
+  "n_hc": 22,
+  "n_pd": 50,
+  "n_samples": 72,
+  "threshold": 0.5
+}

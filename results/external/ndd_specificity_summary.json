@@ -1,0 +1,10 @@
+{
+  "fraction_predicted_hc_at_0_5": 0.4791666666666667,
+  "fraction_predicted_pd_at_0_5": 0.5208333333333334,
+  "max_pd_probability": 0.9998323917388916,
+  "mean_pd_probability": 0.48905033407815307,
+  "median_pd_probability": 0.5199815630912781,
+  "min_pd_probability": 0.0005451934994198382,
+  "n_samples": 48,
+  "std_pd_probability": 0.3702870102804512
+}

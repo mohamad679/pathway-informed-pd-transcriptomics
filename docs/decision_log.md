@@ -227,3 +227,11 @@
 - Fit the frozen `StandardScaler` on full development only and wrote the immutable frozen payload files plus `HASH_BEFORE.txt`.
 - External and NDD files were not loaded, and the external cohort has not yet been scored.
 - This is pre-score bundle freezing only, not external-validation performance.
+
+## 2026-07-10 - Phase 6 one-time frozen-model scoring
+
+- Verified `frozen-v1` at `6b150f8f64935e3bbd4b7bb64a5ec59e665a7f22` and verified `HASH_BEFORE.txt` before loading external or NDD inputs.
+- Applied only the frozen preprocessing parameters; no model retraining, weight update, scaler refit, threshold tuning, or outcome-based selection occurred.
+- Scored the external PD/HC cohort once and the held-out NDD cohort once at the fixed threshold of 0.5.
+- Treated the unlabeled NDD analysis only as a specificity/stress test.
+- These results are research validation only, not clinical validation, and support no clinical, diagnostic, or deployment claim.

@@ -1,0 +1,23 @@
+{
+  "execution_scope": "one-time frozen-model external PD/HC scoring and held-out NDD specificity stress test",
+  "external_input_paths": [
+    "data/processed/ext_X.npy",
+    "data/processed/ext_y.npy",
+    "data/processed/ext_sample_ids.txt"
+  ],
+  "external_metric_used_for_selection": false,
+  "external_scored_once": true,
+  "frozen_commit": "6b150f8f64935e3bbd4b7bb64a5ec59e665a7f22",
+  "frozen_payload_modified": false,
+  "frozen_tag": "frozen-v1",
+  "hash_before_manifest": "frozen/HASH_BEFORE.txt",
+  "hash_before_verified": true,
+  "model_retrained": false,
+  "ndd_input_paths": [
+    "data/processed/ndd_X.npy",
+    "data/processed/ndd_sample_ids.txt"
+  ],
+  "ndd_scored_once": true,
+  "scaler_refit": false,
+  "threshold": 0.5
+}
