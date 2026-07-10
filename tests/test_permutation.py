@@ -5,6 +5,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src"
@@ -141,3 +142,124 @@ def test_run_label_permutation_binn_cv_skips_append_existing(monkeypatch) -> Non
     assert null_df["permutation_index"].tolist() == [2, 3, 4]
     assert null_df.loc[null_df["permutation_index"] == 3, "null_auroc"].item() == 0.42
     assert call_count == 2
+
+
+def test_checkpoint_file_is_written(monkeypatch, tmp_path: Path) -> None:
+    X, y, folds, mask = synthetic_inputs()
+    checkpoint_path = tmp_path / "permutation_checkpoint.csv"
+
+    def fake_run_binn_cv(
+        X: np.ndarray,
+        y: np.ndarray,
+        folds: list[dict[str, object]],
+        pathway_mask: np.ndarray,
+        **kwargs: object,
+    ) -> tuple[None, pd.DataFrame]:
+        return None, pd.DataFrame({"y_true": y, "y_prob": np.linspace(0.1, 0.9, len(y))})
+
+    monkeypatch.setattr(permutation, "run_binn_cv", fake_run_binn_cv)
+
+    null_df = run_label_permutation_binn_cv(
+        X,
+        y,
+        folds,
+        mask,
+        n_permutations=2,
+        checkpoint_path=checkpoint_path,
+        checkpoint_every=1,
+    )
+
+    checkpoint_df = pd.read_csv(checkpoint_path)
+    pd.testing.assert_frame_equal(checkpoint_df, null_df)
+
+
+def test_checkpoint_resume_skips_existing_indices(monkeypatch, tmp_path: Path) -> None:
+    X, y, folds, mask = synthetic_inputs()
+    checkpoint_path = tmp_path / "permutation_checkpoint.csv"
+    call_count = 0
+
+    def fake_run_binn_cv(
+        X: np.ndarray,
+        y: np.ndarray,
+        folds: list[dict[str, object]],
+        pathway_mask: np.ndarray,
+        **kwargs: object,
+    ) -> tuple[None, pd.DataFrame]:
+        nonlocal call_count
+        call_count += 1
+        return None, pd.DataFrame({"y_true": y, "y_prob": np.linspace(0.1, 0.9, len(y))})
+
+    monkeypatch.setattr(permutation, "run_binn_cv", fake_run_binn_cv)
+    existing_df = pd.DataFrame({"permutation_index": [1, 3], "null_auroc": [0.11, 0.33]})
+
+    null_df = run_label_permutation_binn_cv(
+        X,
+        y,
+        folds,
+        mask,
+        n_permutations=3,
+        append_existing=existing_df,
+        checkpoint_path=checkpoint_path,
+        checkpoint_every=1,
+    )
+
+    assert call_count == 1
+    assert null_df["permutation_index"].tolist() == [1, 2, 3]
+    checkpoint_df = pd.read_csv(checkpoint_path)
+    assert checkpoint_df["permutation_index"].tolist() == [1, 2, 3]
+
+
+def test_duplicate_existing_permutation_indices_fail() -> None:
+    X, y, folds, mask = synthetic_inputs()
+    existing_df = pd.DataFrame({"permutation_index": [1, 1], "null_auroc": [0.11, 0.12]})
+
+    with pytest.raises(ValueError, match="duplicate permutation_index"):
+        run_label_permutation_binn_cv(
+            X,
+            y,
+            folds,
+            mask,
+            n_permutations=1,
+            append_existing=existing_df,
+        )
+
+
+def test_progress_flag_does_not_alter_result_content(monkeypatch) -> None:
+    X, y, folds, mask = synthetic_inputs()
+
+    def fake_run_binn_cv(
+        X: np.ndarray,
+        y: np.ndarray,
+        folds: list[dict[str, object]],
+        pathway_mask: np.ndarray,
+        **kwargs: object,
+    ) -> tuple[None, pd.DataFrame]:
+        return None, pd.DataFrame({"y_true": y, "y_prob": np.linspace(0.1, 0.9, len(y))})
+
+    monkeypatch.setattr(permutation, "run_binn_cv", fake_run_binn_cv)
+
+    without_progress = run_label_permutation_binn_cv(X, y, folds, mask, n_permutations=2)
+    with_progress = run_label_permutation_binn_cv(
+        X,
+        y,
+        folds,
+        mask,
+        n_permutations=2,
+        progress=True,
+    )
+
+    pd.testing.assert_frame_equal(without_progress, with_progress)
+
+
+def test_checkpoint_every_must_be_positive() -> None:
+    X, y, folds, mask = synthetic_inputs()
+
+    with pytest.raises(ValueError, match="checkpoint_every"):
+        run_label_permutation_binn_cv(
+            X,
+            y,
+            folds,
+            mask,
+            n_permutations=1,
+            checkpoint_every=0,
+        )

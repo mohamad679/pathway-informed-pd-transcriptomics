@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src"
@@ -43,6 +44,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--permutation-seed", type=int, default=20260710)
     parser.add_argument("--bootstrap-seed", type=int, default=20260710)
     parser.add_argument("--resume", type=Path)
+    parser.add_argument("--device", choices=("cpu", "cuda", "auto"), default="cpu")
+    parser.add_argument("--progress", action="store_true")
+    parser.add_argument("--checkpoint-every", type=int, default=1)
+    parser.add_argument("--auto-resume", action="store_true")
     parser.add_argument("--output-suffix", default="")
     parser.add_argument("--permutation-output-only", action="store_true")
     parser.add_argument("--fast-smoke", action="store_true")
@@ -59,8 +64,8 @@ def append_if_missing(path: Path, block: str) -> None:
         path.write_text(existing.rstrip() + "\n\n" + block.strip() + "\n", encoding="utf-8")
 
 
-def training_kwargs_from_args(args: argparse.Namespace) -> dict[str, int]:
-    kwargs: dict[str, int] = {}
+def training_kwargs_from_args(args: argparse.Namespace) -> dict[str, int | str]:
+    kwargs: dict[str, int | str] = {}
     for arg_name, kwarg_name in (
         ("max_epochs", "max_epochs"),
         ("patience", "patience"),
@@ -71,6 +76,66 @@ def training_kwargs_from_args(args: argparse.Namespace) -> dict[str, int]:
         if value is not None:
             kwargs[kwarg_name] = int(value)
     return kwargs
+
+
+def resolve_device(device_requested: str) -> str:
+    if device_requested == "cpu":
+        return "cpu"
+    if device_requested == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("--device cuda was requested, but torch.cuda.is_available() is false")
+        return "cuda"
+    if device_requested == "auto":
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    raise ValueError(f"unsupported device: {device_requested}")
+
+
+def load_resume_dataframe(
+    resume_path: Path | None,
+    auto_resume: bool,
+    permutation_null_path: Path,
+) -> pd.DataFrame | None:
+    if resume_path is not None and auto_resume:
+        raise ValueError("--resume and --auto-resume cannot be used together")
+    if resume_path is not None:
+        if not resume_path.exists():
+            raise FileNotFoundError(f"--resume path does not exist: {resume_path}")
+        return pd.read_csv(resume_path)
+    if auto_resume and permutation_null_path.exists():
+        return pd.read_csv(permutation_null_path)
+    return None
+
+
+def requested_permutation_indices(start_permutation_index: int, n_permutations: int) -> set[int]:
+    return set(range(start_permutation_index, start_permutation_index + n_permutations))
+
+
+def requested_permutation_subset(
+    permutation_df: pd.DataFrame,
+    requested_indices: set[int],
+) -> pd.DataFrame:
+    if permutation_df.empty:
+        return permutation_df.loc[:, ["permutation_index", "null_auroc"]].copy()
+    scoped_df = permutation_df.loc[
+        permutation_df["permutation_index"].astype(int).isin(requested_indices),
+        ["permutation_index", "null_auroc"],
+    ].copy()
+    scoped_df["permutation_index"] = scoped_df["permutation_index"].astype(int)
+    duplicate_mask = scoped_df["permutation_index"].duplicated(keep=False)
+    if duplicate_mask.any():
+        duplicate_indices = sorted(scoped_df.loc[duplicate_mask, "permutation_index"].unique())
+        raise ValueError(f"duplicate permutation_index rows found: {duplicate_indices}")
+    return scoped_df.sort_values("permutation_index").reset_index(drop=True)
+
+
+def final_index_coverage_complete(
+    permutation_df: pd.DataFrame,
+    requested_indices: set[int],
+) -> bool:
+    if permutation_df.empty:
+        return False
+    completed_indices = set(permutation_df["permutation_index"].astype(int).tolist())
+    return completed_indices == requested_indices
 
 
 def output_path(path: Path, suffix: str) -> Path:
@@ -130,7 +195,16 @@ def write_report(summary: dict[str, Any], bootstrap_df: pd.DataFrame, report_pat
         f"{summary['end_permutation_index']}\n"
         f"- Requested permutations this run: {summary['requested_n_permutations']}\n"
         f"- Completed permutations in requested range: {summary['completed_n_permutations']}\n"
+        f"- Completed unique requested permutations: {summary['final_unique_permutation_count']}\n"
+        f"- Exact requested coverage complete: {summary['final_index_coverage_complete']}\n"
         f"- Skipped existing permutations: {summary['skipped_existing_permutations']}\n"
+        f"- Device used: {summary['device_resolved']} "
+        f"(requested: {summary['device_requested']})\n"
+        f"- Checkpoint/resume: auto_resume={summary['auto_resume']}, "
+        f"resume_path={summary['resume_path']}, "
+        f"checkpoint_path={summary['checkpoint_path']}, "
+        f"checkpoint_every={summary['checkpoint_every']}, "
+        f"progress_enabled={summary['progress_enabled']}\n"
         f"- Null AUROC mean: {summary['null_auroc_mean']:.6f}\n"
         f"- Null AUROC std: {summary['null_auroc_std']:.6f}\n"
         f"- Empirical p-value: {summary['empirical_p_value']:.6f}\n"
@@ -146,6 +220,7 @@ def main() -> int:
     args = parse_args()
     n_permutations = 2 if args.fast_smoke else args.n_permutations
     n_bootstrap = 50 if args.fast_smoke else args.n_bootstrap
+    device_resolved = resolve_device(args.device)
     start_permutation_index = int(args.start_permutation_index)
     end_permutation_index = start_permutation_index + n_permutations - 1
     if n_permutations < 1:
@@ -154,6 +229,8 @@ def main() -> int:
         raise ValueError("start_permutation_index must be at least 1")
     if n_bootstrap < 1:
         raise ValueError("n_bootstrap must be at least 1")
+    if args.checkpoint_every < 1:
+        raise ValueError("--checkpoint-every must be at least 1")
 
     calibration_bins_path = output_path(CALIBRATION_BINS_PATH, args.output_suffix)
     bootstrap_ci_path = output_path(BOOTSTRAP_CI_PATH, args.output_suffix)
@@ -180,18 +257,16 @@ def main() -> int:
     bootstrap_df = bootstrap_metric_cis(
         y_true, y_prob, n_bootstrap=n_bootstrap, seed=args.bootstrap_seed
     )
-    append_existing = None
-    if args.resume is not None:
-        if not args.resume.exists():
-            raise FileNotFoundError(f"--resume path does not exist: {args.resume}")
-        append_existing = pd.read_csv(args.resume)
+    append_existing = load_resume_dataframe(args.resume, bool(args.auto_resume), permutation_null_path)
     existing_indices = (
         set(append_existing["permutation_index"].astype(int).tolist())
         if append_existing is not None and "permutation_index" in append_existing.columns
         else set()
     )
-    requested_indices = set(range(start_permutation_index, end_permutation_index + 1))
+    requested_indices = requested_permutation_indices(start_permutation_index, n_permutations)
     skipped_existing_permutations = len(requested_indices & existing_indices)
+    training_kwargs = training_kwargs_from_args(args)
+    training_kwargs["device"] = device_resolved
     permutation_df = run_label_permutation_binn_cv(
         X,
         y,
@@ -199,14 +274,20 @@ def main() -> int:
         pathway_mask,
         n_permutations=n_permutations,
         seed=args.permutation_seed,
-        training_kwargs=training_kwargs_from_args(args),
+        training_kwargs=training_kwargs,
         start_permutation_index=start_permutation_index,
         append_existing=append_existing,
+        progress=bool(args.progress),
+        checkpoint_path=permutation_null_path,
+        checkpoint_every=int(args.checkpoint_every),
     )
-    completed_n_permutations = int(
-        permutation_df["permutation_index"].astype(int).isin(requested_indices).sum()
+    requested_permutation_df = requested_permutation_subset(permutation_df, requested_indices)
+    completed_n_permutations = int(len(requested_permutation_df))
+    final_unique_permutation_count = int(
+        requested_permutation_df["permutation_index"].astype(int).nunique()
     )
-    null_scores = permutation_df["null_auroc"].to_numpy(dtype=float)
+    coverage_complete = final_index_coverage_complete(requested_permutation_df, requested_indices)
+    null_scores = requested_permutation_df["null_auroc"].to_numpy(dtype=float)
     p_value = empirical_p_value(observed_metrics["auroc"], null_scores)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -215,11 +296,12 @@ def main() -> int:
     if write_calibration_bootstrap:
         calibration_bins_df.to_csv(calibration_bins_path, index=False)
         bootstrap_df.to_csv(bootstrap_ci_path, index=False)
-    permutation_df.to_csv(permutation_null_path, index=False)
+    requested_permutation_df.to_csv(permutation_null_path, index=False)
 
     is_batch_chunk = (
         start_permutation_index != 1
         or args.resume is not None
+        or bool(args.auto_resume)
         or bool(args.output_suffix)
         or bool(args.permutation_output_only)
     )
@@ -231,15 +313,24 @@ def main() -> int:
         "fast_smoke": bool(args.fast_smoke),
         "run_mode": run_mode,
         "observed_auroc": float(observed_metrics["auroc"]),
-        "n_permutations": int(len(permutation_df)),
+        "n_permutations": int(final_unique_permutation_count),
         "start_permutation_index": int(start_permutation_index),
         "end_permutation_index": int(end_permutation_index),
         "requested_n_permutations": int(n_permutations),
         "completed_n_permutations": int(completed_n_permutations),
+        "final_unique_permutation_count": int(final_unique_permutation_count),
+        "final_index_coverage_complete": bool(coverage_complete),
         "skipped_existing_permutations": int(skipped_existing_permutations),
         "output_suffix": str(args.output_suffix),
         "permutation_output_only": bool(args.permutation_output_only),
         "permutation_seed": int(args.permutation_seed),
+        "device_requested": str(args.device),
+        "device_resolved": str(device_resolved),
+        "progress_enabled": bool(args.progress),
+        "checkpoint_every": int(args.checkpoint_every),
+        "auto_resume": bool(args.auto_resume),
+        "resume_path": str(args.resume) if args.resume is not None else None,
+        "checkpoint_path": str(permutation_null_path),
         "null_auroc_mean": float(np.mean(null_scores)),
         "null_auroc_std": float(np.std(null_scores, ddof=0)),
         "empirical_p_value": float(p_value),
@@ -252,7 +343,7 @@ def main() -> int:
         "external_or_ndd_used": False,
         "final_validation": False,
         "model_frozen": False,
-        "training_kwargs": training_kwargs_from_args(args),
+        "training_kwargs": training_kwargs,
         "inputs": [
             "data/processed/dev_X.npy",
             "data/processed/dev_y.npy",
@@ -269,12 +360,20 @@ def main() -> int:
 - Ran a configurable development-only calibration, bootstrap CI, and label-permutation foundation.
 - Label permutations shuffled labels only within development data and reused the predefined development folds.
 - No external cohort or held-out NDD data was loaded or used; this is not final validation and does not freeze a model.
-- Run mode: {'fast smoke only, not the final Phase 5 result' if args.fast_smoke else 'batch/chunk run' if is_batch_chunk else 'configured Phase 5 run'}; requested permutations={n_permutations}; completed requested range={completed_n_permutations}; bootstrap={n_bootstrap}."""
+- Run mode: {'fast smoke only, not the final Phase 5 result' if args.fast_smoke else 'batch/chunk run' if is_batch_chunk else 'configured Phase 5 run'}; requested permutations={n_permutations}; completed requested range={completed_n_permutations}; bootstrap={n_bootstrap}; device={device_resolved}; checkpoint_every={args.checkpoint_every}; auto_resume={bool(args.auto_resume)}."""
     append_if_missing(DECISION_LOG_PATH, decision_block)
 
     print(f"Observed AUROC: {observed_metrics['auroc']:.6f}")
-    print(f"Permutation count: {len(permutation_df)}")
+    print(f"Device requested/resolved: {args.device}/{device_resolved}")
+    print(
+        f"Checkpoint path: {permutation_null_path}; checkpoint every: {args.checkpoint_every}; "
+        f"auto-resume: {bool(args.auto_resume)}; resume path: {args.resume}; "
+        f"progress: {bool(args.progress)}"
+    )
+    print(f"Permutation count: {len(requested_permutation_df)}")
     print(f"Requested permutation range: {start_permutation_index}-{end_permutation_index}")
+    print(f"Completed unique requested permutations: {final_unique_permutation_count}")
+    print(f"Exact requested coverage complete: {coverage_complete}")
     print(f"Skipped existing permutations: {skipped_existing_permutations}")
     print(f"Null mean/std: {summary['null_auroc_mean']:.6f}/{summary['null_auroc_std']:.6f}")
     print(f"Empirical p-value: {p_value:.6f}")
@@ -283,6 +382,7 @@ def main() -> int:
     print("Bootstrap CI table:")
     print(bootstrap_df.to_string(index=False))
     print("Confirmation no external/NDD data used: yes")
+    print("Development-only; no external/NDD data used; not final external validation.")
     if args.fast_smoke:
         print("Fast-smoke outputs are smoke-only and not the final Phase 5 result.")
     return 0

@@ -67,21 +67,23 @@ def _train_binn_fold(
     learning_rate: float = 1e-3,
     weight_decay: float = 1e-4,
     batch_size: int = 64,
+    device: str | torch.device = "cpu",
 ) -> dict[str, object]:
     """Train one fold and retain the fitted model and train-only scaler internally."""
     set_torch_seed(seed)
+    resolved_device = torch.device(device)
     train_idx_array, val_idx_array = np.asarray(train_idx, dtype=int), np.asarray(val_idx, dtype=int)
     scaler = StandardScaler()
     X_train = scaler.fit_transform(np.asarray(X)[train_idx_array]).astype(np.float32, copy=False)
     X_val = scaler.transform(np.asarray(X)[val_idx_array]).astype(np.float32, copy=False)
     y_train, y_val = np.asarray(y)[train_idx_array], np.asarray(y)[val_idx_array]
-    model = BINNClassifier(pathway_mask, hidden_dim=hidden_dim, dropout=dropout)
+    model = BINNClassifier(pathway_mask, hidden_dim=hidden_dim, dropout=dropout).to(resolved_device)
     criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    X_train_tensor = torch.as_tensor(X_train, dtype=torch.float32)
-    y_train_tensor = torch.as_tensor(y_train, dtype=torch.float32)
-    X_val_tensor = torch.as_tensor(X_val, dtype=torch.float32)
-    y_val_tensor = torch.as_tensor(y_val, dtype=torch.float32)
+    X_train_tensor = torch.as_tensor(X_train, dtype=torch.float32, device=resolved_device)
+    y_train_tensor = torch.as_tensor(y_train, dtype=torch.float32, device=resolved_device)
+    X_val_tensor = torch.as_tensor(X_val, dtype=torch.float32, device=resolved_device)
+    y_val_tensor = torch.as_tensor(y_val, dtype=torch.float32, device=resolved_device)
     has_both_validation_classes = np.unique(y_val).size == 2
     best_state: dict[str, torch.Tensor] | None = None
     best_score = -float("inf")
@@ -91,7 +93,7 @@ def _train_binn_fold(
 
     for epoch in range(1, max_epochs + 1):
         model.train()
-        for indices in torch.randperm(len(train_idx_array)).split(batch_size):
+        for indices in torch.randperm(len(train_idx_array), device=resolved_device).split(batch_size):
             optimizer.zero_grad()
             loss = criterion(model(X_train_tensor[indices]), y_train_tensor[indices])
             loss.backward()
@@ -165,11 +167,12 @@ def train_one_binn_fold(
     learning_rate: float = 1e-3,
     weight_decay: float = 1e-4,
     batch_size: int = 64,
+    device: str | torch.device = "cpu",
 ) -> dict[str, object]:
-    """Train one CPU BINN fold with train-only scaling and early stopping."""
+    """Train one BINN fold with train-only scaling and early stopping."""
     result = _train_binn_fold(
         X, y, train_idx, val_idx, pathway_mask, seed, fold_id, hidden_dim, dropout,
-        max_epochs, patience, learning_rate, weight_decay, batch_size,
+        max_epochs, patience, learning_rate, weight_decay, batch_size, device,
     )
     return {
         "metrics": result["metrics"], "y_prob": result["y_prob"], "metadata": result["metadata"],
@@ -192,11 +195,12 @@ def train_one_binn_fold_return_model(
     learning_rate: float = 1e-3,
     weight_decay: float = 1e-4,
     batch_size: int = 64,
+    device: str | torch.device = "cpu",
 ) -> dict[str, object]:
     """Retrain one development fold and return its model, scaler, and audit metadata."""
     result = _train_binn_fold(
         X, y, train_idx, val_idx, pathway_mask, seed, fold_id, hidden_dim, dropout,
-        max_epochs, patience, learning_rate, weight_decay, batch_size,
+        max_epochs, patience, learning_rate, weight_decay, batch_size, device,
     )
     return {key: result[key] for key in ("model", "scaler", "metadata")}
 
@@ -206,6 +210,7 @@ def run_binn_cv(
     y: np.ndarray,
     folds: Sequence[dict[str, object]],
     pathway_mask: np.ndarray,
+    device: str | torch.device = "cpu",
     **training_kwargs: object,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Run BINN CV on the existing development folds with Phase 2's fixed seeds."""
@@ -216,7 +221,8 @@ def run_binn_cv(
             train_idx = np.asarray(fold["train_indices"], dtype=int)
             val_idx = np.asarray(fold["validation_indices"], dtype=int)
             result = train_one_binn_fold(
-                X, y, train_idx, val_idx, pathway_mask, seed, fold_id, **training_kwargs
+                X, y, train_idx, val_idx, pathway_mask, seed, fold_id,
+                device=device, **training_kwargs
             )
             metric_rows.append({"model": MODEL_NAME, **result["metrics"], **result["metadata"]})
             prediction_rows.extend(
