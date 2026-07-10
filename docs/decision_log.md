@@ -170,3 +170,10 @@
 - Uses train-only scaling and validation-partition pathway activations for interpretation; it is not model selection, final validation, or external validation.
 - No external cohort or held-out NDD data is loaded or used; no biological claims are made.
 - Integrated Gradients, Captum, attention, permutation testing, and later-phase logic are excluded.
+
+## 2026-07-10 — Phase 4 development-only pathway-level Integrated Gradients
+
+- Retrains the existing development-only BINN folds solely because Phase 3 fold checkpoints were not retained.
+- Uses train-only scaling, validation-partition pathway activations, and zero-baseline Integrated Gradients through the downstream pathway head; it is not model selection, final validation, or external validation.
+- No external cohort or held-out NDD data is loaded or used; no biological claims are made.
+- Attention, permutation testing, activation-attribution outputs, and later-phase logic are excluded.

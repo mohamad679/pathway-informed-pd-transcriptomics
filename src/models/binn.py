@@ -53,6 +53,13 @@ class BINNClassifier(nn.Module):
         logits = self.hidden_to_logit(x).squeeze(-1)
         return logits, pathway_activations
 
+    def pathway_head_from_activations(self, pathway_activations: Tensor) -> Tensor:
+        """Apply only the downstream classifier head to pathway activations."""
+        x = self.dropout(pathway_activations)
+        x = self.pathway_to_hidden(x)
+        x = self.dropout(self.relu(x))
+        return self.hidden_to_logit(x).squeeze(-1)
+
     @torch.no_grad()
     def apply_masks_(self) -> "BINNClassifier":
         """Hard-zero weights outside every fixed-connectivity mask."""
