@@ -163,3 +163,10 @@
 - No external cohort or held-out NDD result was used.
 - No model was trained and BINN CV was not rerun inside this gate.
 - This is development-only and not final validation; the gate concerns stable training and mask integrity, not superiority.
+
+## 2026-07-10 — Phase 4 development-only activation attribution
+
+- Retrains the existing development-only BINN folds solely because Phase 3 fold checkpoints were not retained.
+- Uses train-only scaling and validation-partition pathway activations for interpretation; it is not model selection, final validation, or external validation.
+- No external cohort or held-out NDD data is loaded or used; no biological claims are made.
+- Integrated Gradients, Captum, attention, permutation testing, and later-phase logic are excluded.

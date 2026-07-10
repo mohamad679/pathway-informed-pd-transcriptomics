@@ -52,22 +52,7 @@ def standardize_train_only(X_train: np.ndarray, X_val: np.ndarray) -> tuple[np.n
     )
 
 
-def set_torch_seed(seed: int) -> None:
-    """Set CPU-relevant random seeds for reproducible fold training."""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.use_deterministic_algorithms(True, warn_only=True)
-
-
-def _validation_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, float]:
-    """Use the shared metrics helper when a validation fold has both classes."""
-    if np.unique(y_true).size == 2:
-        return compute_binary_metrics(y_true, y_prob)
-    return {name: float("nan") for name in ("auroc", "auprc", "balanced_accuracy", "brier", "ece")}
-
-
-def train_one_binn_fold(
+def _train_binn_fold(
     X: np.ndarray,
     y: np.ndarray,
     train_idx: Sequence[int],
@@ -83,10 +68,12 @@ def train_one_binn_fold(
     weight_decay: float = 1e-4,
     batch_size: int = 64,
 ) -> dict[str, object]:
-    """Train one CPU BINN fold with train-only scaling and early stopping."""
+    """Train one fold and retain the fitted model and train-only scaler internally."""
     set_torch_seed(seed)
     train_idx_array, val_idx_array = np.asarray(train_idx, dtype=int), np.asarray(val_idx, dtype=int)
-    X_train, X_val = standardize_train_only(X[train_idx_array], X[val_idx_array])
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(np.asarray(X)[train_idx_array]).astype(np.float32, copy=False)
+    X_val = scaler.transform(np.asarray(X)[val_idx_array]).astype(np.float32, copy=False)
     y_train, y_val = np.asarray(y)[train_idx_array], np.asarray(y)[val_idx_array]
     model = BINNClassifier(pathway_mask, hidden_dim=hidden_dim, dropout=dropout)
     criterion = nn.BCEWithLogitsLoss()
@@ -142,7 +129,76 @@ def train_one_binn_fold(
         "n_masked_weights": int(integrity["n_masked_weights"]),
         "n_unmasked_weights": int(integrity["n_unmasked_weights"]),
     }
-    return {"metrics": metrics, "y_prob": y_prob, "metadata": metadata, **metrics, **metadata}
+    return {
+        "model": model, "scaler": scaler, "metrics": metrics, "y_prob": y_prob,
+        "metadata": metadata,
+    }
+
+
+def set_torch_seed(seed: int) -> None:
+    """Set CPU-relevant random seeds for reproducible fold training."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+
+def _validation_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, float]:
+    """Use the shared metrics helper when a validation fold has both classes."""
+    if np.unique(y_true).size == 2:
+        return compute_binary_metrics(y_true, y_prob)
+    return {name: float("nan") for name in ("auroc", "auprc", "balanced_accuracy", "brier", "ece")}
+
+
+def train_one_binn_fold(
+    X: np.ndarray,
+    y: np.ndarray,
+    train_idx: Sequence[int],
+    val_idx: Sequence[int],
+    pathway_mask: np.ndarray,
+    seed: int,
+    fold_id: int,
+    hidden_dim: int = 64,
+    dropout: float = 0.25,
+    max_epochs: int = 300,
+    patience: int = 20,
+    learning_rate: float = 1e-3,
+    weight_decay: float = 1e-4,
+    batch_size: int = 64,
+) -> dict[str, object]:
+    """Train one CPU BINN fold with train-only scaling and early stopping."""
+    result = _train_binn_fold(
+        X, y, train_idx, val_idx, pathway_mask, seed, fold_id, hidden_dim, dropout,
+        max_epochs, patience, learning_rate, weight_decay, batch_size,
+    )
+    return {
+        "metrics": result["metrics"], "y_prob": result["y_prob"], "metadata": result["metadata"],
+        **result["metrics"], **result["metadata"],
+    }
+
+
+def train_one_binn_fold_return_model(
+    X: np.ndarray,
+    y: np.ndarray,
+    train_idx: Sequence[int],
+    val_idx: Sequence[int],
+    pathway_mask: np.ndarray,
+    seed: int,
+    fold_id: int,
+    hidden_dim: int = 64,
+    dropout: float = 0.25,
+    max_epochs: int = 300,
+    patience: int = 20,
+    learning_rate: float = 1e-3,
+    weight_decay: float = 1e-4,
+    batch_size: int = 64,
+) -> dict[str, object]:
+    """Retrain one development fold and return its model, scaler, and audit metadata."""
+    result = _train_binn_fold(
+        X, y, train_idx, val_idx, pathway_mask, seed, fold_id, hidden_dim, dropout,
+        max_epochs, patience, learning_rate, weight_decay, batch_size,
+    )
+    return {key: result[key] for key in ("model", "scaler", "metadata")}
 
 
 def run_binn_cv(
