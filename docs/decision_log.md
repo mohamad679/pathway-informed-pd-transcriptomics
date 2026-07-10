@@ -154,3 +154,12 @@
 - Scaling was fit on each training partition only; no external cohort or held-out NDD data was used.
 - Off-mask weights were re-zeroed after each optimizer step and verified exactly zero after training.
 - This is a development-only training gate, not a final or external-validation performance claim.
+
+## 2026-07-10 — Phase 3 final gate audit
+
+- Audited only existing Phase 3 development BINN outputs and the saved pathway mask.
+- Confirmed fixed seed/fold coverage, finite bounded metrics and OOF probabilities, and the development AUROC sanity check.
+- Confirmed off-mask weights remained exactly zero and reported weight counts match the saved mask.
+- No external cohort or held-out NDD result was used.
+- No model was trained and BINN CV was not rerun inside this gate.
+- This is development-only and not final validation; the gate concerns stable training and mask integrity, not superiority.
