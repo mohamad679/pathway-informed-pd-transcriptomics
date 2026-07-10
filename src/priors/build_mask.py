@@ -16,16 +16,33 @@ from priors.gmt import (
 
 def build_pathway_mask(
     gene_space: Iterable[str], gene_sets: Mapping[str, Iterable[str]], min_genes: int = 10
-) -> tuple[sparse.csr_matrix, list[str], list[str], dict[str, int | float]]:
+) -> tuple[sparse.csr_matrix, list[str], list[str], dict[str, int | float | str]]:
     """Return a deterministic CSR pathway-by-gene membership matrix and audit statistics."""
     gene_names = [str(gene).strip() for gene in gene_space]
     normalized_genes = [normalize_gene_symbol(gene) for gene in gene_names]
     if not gene_names or any(gene is None for gene in normalized_genes):
         raise ValueError("gene_space must contain at least one valid gene symbol per line.")
-    if len(set(normalized_genes)) != len(normalized_genes):
-        raise ValueError("gene_space contains duplicate symbols after normalization.")
+    normalized_gene_indices: dict[str, list[int]] = {}
+    for index, normalized_gene in enumerate(normalized_genes):
+        assert normalized_gene is not None
+        normalized_gene_indices.setdefault(normalized_gene, []).append(index)
 
-    gene_index = {gene: index for index, gene in enumerate(normalized_genes)}
+    collision_groups = {
+        normalized_gene: indices
+        for normalized_gene, indices in normalized_gene_indices.items()
+        if len(indices) > 1
+    }
+    gene_index = {
+        normalized_gene: next(
+            (
+                index
+                for index in indices
+                if gene_names[index] == normalized_gene
+            ),
+            indices[0],
+        )
+        for normalized_gene, indices in normalized_gene_indices.items()
+    }
     filtered_sets = filter_gene_sets_to_gene_space(gene_sets, gene_names, min_genes=min_genes)
     pathway_names = sorted(filtered_sets)
     if not pathway_names:
@@ -54,7 +71,7 @@ def build_pathway_mask(
     assert int(genes_per_pathway.min()) >= min_genes, "A pathway violates min_genes."
     assert np.all(pathways_per_gene >= 0), "Pathway counts per gene must be non-negative."
 
-    stats: dict[str, int | float] = {
+    stats: dict[str, int | float | str] = {
         "n_pathways": mask.shape[0],
         "n_genes": mask.shape[1],
         "n_edges": int(mask.nnz),
@@ -66,6 +83,13 @@ def build_pathway_mask(
         "max_pathways_per_gene": int(pathways_per_gene.max()),
         "mean_pathways_per_gene": float(pathways_per_gene.mean()),
         "n_genes_with_no_pathway": int((pathways_per_gene == 0).sum()),
+        "n_normalized_gene_collision_groups": len(collision_groups),
+        "n_genes_in_normalization_collision_groups": sum(
+            len(indices) for indices in collision_groups.values()
+        ),
+        "normalization_collision_resolution_policy": (
+            "prefer_exact_all_uppercase_else_first_gene_space_order"
+        ),
         "n_rna_processing_pathways": sum(
             classify_rna_processing_pathways(pathway_name) for pathway_name in pathway_names
         ),

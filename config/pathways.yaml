@@ -1,16 +1,14 @@
 msigdb:
-  # Replace these placeholders with the exact MSigDB release and local GMT file(s).
-  # GMT files are deliberately never downloaded by the pipeline.
-  version: TODO
+  version: 2024.1.Hs
   gmt_files:
-    - data/raw/msigdb/TODO.gmt
+  - data/raw/msigdb/c2.cp.reactome.v2024.1.Hs.symbols.gmt
   min_genes_present: 10
   max_genes_present: null
   rna_processing_keywords:
-    - SPLICEOSOME
-    - RNA_TRANSPORT
-    - MRNA_SURVEILLANCE
-    - RNA_DEGRADATION
-    - MRNA_SPLICING
-    - RNA_BINDING
-    - RIBONUCLEOPROTEIN
+  - SPLICEOSOME
+  - RNA_TRANSPORT
+  - MRNA_SURVEILLANCE
+  - RNA_DEGRADATION
+  - MRNA_SPLICING
+  - RNA_BINDING
+  - RIBONUCLEOPROTEIN

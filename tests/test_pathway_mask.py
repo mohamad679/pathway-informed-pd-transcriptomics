@@ -36,3 +36,17 @@ def test_mask_edges_match_memberships_and_counts_unmapped_gene() -> None:
     assert memberships == {"A_PATH": {"G2", "G3"}, "Z_PATH": {"G1", "G3"}}
     assert stats["n_genes_with_no_pathway"] == 1
     assert stats["n_edges"] == 4
+
+
+def test_normalization_collision_prefers_exact_uppercase_gene_space_symbol() -> None:
+    gene_space = ["IGK", "Igk", "SNCA"]
+    gene_sets = {"IGK_PATH": {"IGK", "SNCA"}}
+
+    mask, pathway_names, gene_names, stats = build_pathway_mask(gene_space, gene_sets, min_genes=2)
+
+    assert mask.shape == (1, 3)
+    assert pathway_names == ["IGK_PATH"]
+    assert gene_names == gene_space
+    assert mask.getrow(0).indices.tolist() == [0, 2]
+    assert stats["n_normalized_gene_collision_groups"] == 1
+    assert stats["n_genes_in_normalization_collision_groups"] == 2

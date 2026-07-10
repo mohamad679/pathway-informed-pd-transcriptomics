@@ -133,3 +133,10 @@
 - No external cohort or held-out NDD data was loaded or used.
 - No modeling, BINN, pathway masks, or MSigDB logic was implemented or used.
 - This gate result is not an external-validation result or final performance claim.
+
+## 2026-07-10 — Phase 3 pathway-mask construction foundation
+
+- Added local-only MSigDB GMT parsing and deterministic sparse pathway-mask construction.
+- A real mask is written only when configured local GMT files and the fixed `gene_space.txt` are available.
+- The mask audit records configured MSigDB version, exact input paths, and SHA-256 checksums.
+- No BINN model, training, attention, Integrated Gradients, external cohort, or held-out NDD data was used.
