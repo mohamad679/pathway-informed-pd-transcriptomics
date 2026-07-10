@@ -250,3 +250,11 @@
 - Phase 7 limitations were written before the final README.
 - Negative external calibration and threshold results were retained explicitly.
 - No new computation or result modification occurred.
+
+## 2026-07-10 - Phase 7 final project gate
+
+- Final methods, results, limitations, README, figures, and reproducibility documentation completed.
+- Existing results were consolidated without retraining or rescoring.
+- Negative external threshold and calibration results were retained.
+- Frozen chain of custody remained intact.
+- Final gate passed only as a methods/reproducibility project, not as a clinical or diagnostic model.
