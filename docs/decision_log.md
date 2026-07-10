@@ -209,3 +209,13 @@
 - Bootstrap confidence intervals used 2,000 resamples; AUROC 95% CI was 0.673004 to 0.731080.
 - The permutation count was limited to 50 because 1,000 repeated three-seed, five-fold BINN training runs were not computationally feasible within the available runtime and project constraints.
 - This is a limited-resolution development-only statistical check, not final external validation, not evidence for p < 0.01, and not a biological claim.
+
+## 2026-07-10 - Phase 5 final statistical-validation gate
+
+- Audited only existing Phase 5 development statistical-validation artifacts.
+- Confirmed exactly 50 unique permutation rows covering indices 1 through 50.
+- Observed AUROC: `0.702895`; null AUROC mean/std: `0.536038` / `0.022579`; empirical p-value: `0.019608`.
+- Confirmed bootstrap CI integrity with 2,000 resamples per metric and 15-bin calibration sample accounting.
+- The production limitation remains: 50 permutations only, minimum attainable p-value is `1/51 = 0.019608`, and this result cannot support `p < 0.01`.
+- No training, retraining, permutation rerun, bootstrap rerun, model freezing, external cohort, or held-out NDD data was used inside this gate.
+- This is development-only statistical-artifact integrity auditing, not final validation and not a biological claim.
