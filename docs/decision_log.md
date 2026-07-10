@@ -140,3 +140,10 @@
 - A real mask is written only when configured local GMT files and the fixed `gene_space.txt` are available.
 - The mask audit records configured MSigDB version, exact input paths, and SHA-256 checksums.
 - No BINN model, training, attention, Integrated Gradients, external cohort, or held-out NDD data was used.
+
+## 2026-07-10 — Phase 3 BINN model foundation audit
+
+- Added a fixed gene-to-pathway masked linear layer and BINN classifier foundation.
+- The integrity smoke test uses only four development expression rows for one forward pass and a synthetic backward pass.
+- Off-mask weights are excluded from the forward computation, receive zero gradients, and are hard-zeroed after mask application.
+- No training, cross-validation, attention, Integrated Gradients, external cohort, or held-out NDD data was used.
