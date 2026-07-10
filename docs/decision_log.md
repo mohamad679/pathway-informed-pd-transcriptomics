@@ -84,3 +84,12 @@
 - External cohort samples were checked for overlap but were not used for split creation.
 - Donor IDs were not available in the processed metadata inputs, so GSM accession was used as the conservative subject identifier for split integrity.
 - No modeling, baselines, training, pathway masks, MSigDB logic, or external-validation model selection artifacts were created.
+
+## 2026-07-10 — Phase 1 final gate audit and cohort overview figure
+
+- Validated only the existing processed Phase 1 artifacts and development fold file.
+- Confirmed development, held-out NDD, and external matrix shapes and Phase 1 label counts against the expected gate values.
+- Confirmed per-sample z-score sanity for development and external matrices.
+- Confirmed that each development sample appears exactly once in validation across the saved folds with no train/validation overlap.
+- Computed a development-only PCA for a sanity visualization and saved a single cohort overview PNG.
+- No modeling, baselines, training, pathway masks, MSigDB logic, or external-validation model selection was performed.
