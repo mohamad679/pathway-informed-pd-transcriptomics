@@ -147,3 +147,10 @@
 - The integrity smoke test uses only four development expression rows for one forward pass and a synthetic backward pass.
 - Off-mask weights are excluded from the forward computation, receive zero gradients, and are hard-zeroed after mask application.
 - No training, cross-validation, attention, Integrated Gradients, external cohort, or held-out NDD data was used.
+
+## 2026-07-10 — Phase 3 development-only BINN CV
+
+- Trained the pathway-constrained BINN only on predefined development folds with seeds 11, 23, and 37.
+- Scaling was fit on each training partition only; no external cohort or held-out NDD data was used.
+- Off-mask weights were re-zeroed after each optimizer step and verified exactly zero after training.
+- This is a development-only training gate, not a final or external-validation performance claim.
