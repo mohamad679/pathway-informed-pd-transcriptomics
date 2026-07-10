@@ -9,7 +9,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
-from models.binn_training import run_binn_cv, standardize_train_only, train_one_binn_fold
+from models.binn_training import (
+    run_binn_cv,
+    standardize_train_only,
+    train_one_binn_fold,
+    train_one_binn_fold_return_model,
+)
 
 
 def synthetic_inputs() -> tuple[np.ndarray, np.ndarray, list[dict[str, object]], np.ndarray]:
@@ -39,6 +44,48 @@ def test_train_one_fold_returns_metrics_metadata_and_zero_off_mask_weights() -> 
     assert result["metadata"]["max_abs_masked_weight_after_training"] == 0.0
 
 
+def test_train_one_fold_accepts_explicit_cpu_device() -> None:
+    X, y, folds, mask = synthetic_inputs()
+    result = train_one_binn_fold(
+        X,
+        y,
+        folds[0]["train_indices"],
+        folds[0]["validation_indices"],
+        mask,
+        11,
+        1,
+        hidden_dim=4,
+        dropout=0.0,
+        max_epochs=2,
+        patience=1,
+        batch_size=4,
+        device="cpu",
+    )
+    assert isinstance(result["y_prob"], np.ndarray)
+    assert result["metadata"]["max_abs_masked_weight_after_training"] == 0.0
+
+
+def test_returned_model_remains_on_selected_device() -> None:
+    X, y, folds, mask = synthetic_inputs()
+    result = train_one_binn_fold_return_model(
+        X,
+        y,
+        folds[0]["train_indices"],
+        folds[0]["validation_indices"],
+        mask,
+        11,
+        1,
+        hidden_dim=4,
+        dropout=0.0,
+        max_epochs=2,
+        patience=1,
+        batch_size=4,
+        device="cpu",
+    )
+    model = result["model"]
+    assert next(model.parameters()).device.type == "cpu"
+
+
 def test_run_cv_has_fixed_seed_fold_rows_and_valid_oof_probabilities() -> None:
     X, y, folds, mask = synthetic_inputs()
     metrics_df, oof_df = run_binn_cv(X, y, folds, mask, hidden_dim=4, dropout=0.0, max_epochs=2, patience=1, batch_size=4)
@@ -46,3 +93,21 @@ def test_run_cv_has_fixed_seed_fold_rows_and_valid_oof_probabilities() -> None:
     assert len(oof_df) == 3 * len(X)
     assert {"sample_index", "y_true", "y_prob"} <= set(oof_df.columns)
     assert oof_df["y_prob"].between(0.0, 1.0).all()
+
+
+def test_run_cv_accepts_explicit_cpu_device() -> None:
+    X, y, folds, mask = synthetic_inputs()
+    metrics_df, oof_df = run_binn_cv(
+        X,
+        y,
+        folds,
+        mask,
+        device="cpu",
+        hidden_dim=4,
+        dropout=0.0,
+        max_epochs=2,
+        patience=1,
+        batch_size=4,
+    )
+    assert len(metrics_df) == 3 * len(folds)
+    assert len(oof_df) == 3 * len(X)

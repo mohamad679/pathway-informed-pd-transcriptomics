@@ -200,3 +200,12 @@
 - Label permutations shuffled labels only within development data and reused the predefined development folds.
 - No external cohort or held-out NDD data was loaded or used; this is not final validation and does not freeze a model.
 - Run mode: fast smoke only, not the final Phase 5 result; permutations=2; bootstrap=50.
+
+## 2026-07-10 — Phase 5 limited-resolution production statistical validation
+
+- Completed exactly 50 development-only label permutations on a Google Colab Tesla T4 GPU, covering permutation indices 1 through 50 without duplicates.
+- Observed pooled BINN AUROC was 0.702895; null AUROC mean was 0.536038 with standard deviation 0.022579.
+- No null AUROC reached the observed score, yielding the minimum attainable empirical p-value for 50 permutations: 1 / 51 = 0.019608.
+- Bootstrap confidence intervals used 2,000 resamples; AUROC 95% CI was 0.673004 to 0.731080.
+- The permutation count was limited to 50 because 1,000 repeated three-seed, five-fold BINN training runs were not computationally feasible within the available runtime and project constraints.
+- This is a limited-resolution development-only statistical check, not final external validation, not evidence for p < 0.01, and not a biological claim.
