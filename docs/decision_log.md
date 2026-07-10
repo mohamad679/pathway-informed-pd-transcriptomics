@@ -235,3 +235,12 @@
 - Scored the external PD/HC cohort once and the held-out NDD cohort once at the fixed threshold of 0.5.
 - Treated the unlabeled NDD analysis only as a specificity/stress test.
 - These results are research validation only, not clinical validation, and support no clinical, diagnostic, or deployment claim.
+
+## 2026-07-10 - Phase 6 final frozen external-validation gate
+
+- Audited only the existing frozen manifests, immutable payload hashes, external/NDD result artifacts, and one-time scoring audit.
+- Confirmed `HASH_BEFORE.txt` equals `HASH_AFTER.txt` exactly and both manifests verify the frozen `frozen-v1` payload at `6b150f8f64935e3bbd4b7bb64a5ec59e665a7f22`.
+- External artifact: `72` rows (`22` HC, `50` PD); AUROC `0.695455`; AUPRC `0.782081`; balanced accuracy `0.500000`; Brier `0.694444`; ECE `0.694441`.
+- NDD artifact: `48` rows; fraction predicted PD at 0.5 `0.520833`; this remains a specificity/stress test only.
+- No retraining, preprocessing refit, inference/rescoring, threshold tuning, or external-metric model selection occurred inside the gate.
+- PASS means chain-of-custody and artifact integrity only; it does not mean clinical validation, deployment readiness, or acceptable calibration and supports no clinical, diagnostic, deployment, or biological claim.
