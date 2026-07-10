@@ -1,2 +1,16 @@
-# Phase 0 skeleton only.
-# Fill in pathway source and version settings in later phases.
+msigdb:
+  # Replace these placeholders with the exact MSigDB release and local GMT file(s).
+  # GMT files are deliberately never downloaded by the pipeline.
+  version: TODO
+  gmt_files:
+    - data/raw/msigdb/TODO.gmt
+  min_genes_present: 10
+  max_genes_present: null
+  rna_processing_keywords:
+    - SPLICEOSOME
+    - RNA_TRANSPORT
+    - MRNA_SURVEILLANCE
+    - RNA_DEGRADATION
+    - MRNA_SPLICING
+    - RNA_BINDING
+    - RIBONUCLEOPROTEIN
