@@ -44,6 +44,15 @@ class BINNClassifier(nn.Module):
         x = self.dropout(self.relu(x))
         return self.hidden_to_logit(x).squeeze(-1)
 
+    def forward_with_pathway_activations(self, inputs: Tensor) -> tuple[Tensor, Tensor]:
+        """Return logits and post-ReLU, pre-dropout pathway activations."""
+        pathway_activations = self.relu(self.gene_to_pathway(inputs))
+        x = self.dropout(pathway_activations)
+        x = self.pathway_to_hidden(x)
+        x = self.dropout(self.relu(x))
+        logits = self.hidden_to_logit(x).squeeze(-1)
+        return logits, pathway_activations
+
     @torch.no_grad()
     def apply_masks_(self) -> "BINNClassifier":
         """Hard-zero weights outside every fixed-connectivity mask."""

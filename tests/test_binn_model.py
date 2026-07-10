@@ -24,6 +24,15 @@ def test_forward_output_shape() -> None:
     assert model(torch.zeros(5, 3)).shape == (5,)
 
 
+def test_forward_with_pathway_activations_returns_expected_shapes() -> None:
+    model = BINNClassifier(MASK, hidden_dim=4, dropout=0.0)
+
+    logits, pathway_activations = model.forward_with_pathway_activations(torch.zeros(5, 3))
+
+    assert logits.shape == (5,)
+    assert pathway_activations.shape == (5, 2)
+
+
 def test_apply_masks_preserves_zero_masked_weights() -> None:
     model = BINNClassifier(MASK, hidden_dim=4)
     with torch.no_grad():
