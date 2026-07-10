@@ -93,3 +93,11 @@
 - Confirmed that each development sample appears exactly once in validation across the saved folds with no train/validation overlap.
 - Computed a development-only PCA for a sanity visualization and saved a single cohort overview PNG.
 - No modeling, baselines, training, pathway masks, MSigDB logic, or external-validation model selection was performed.
+
+## 2026-07-10 — Phase 2 development-only Logistic Regression baseline
+
+- Evaluated a Logistic Regression baseline using only `dev_X.npy`, `dev_y.npy`, and the predefined development folds.
+- Used `StandardScaler` inside a newly fitted sklearn pipeline for every training fold; no validation-fold information was used to fit the scaler.
+- Used seeds 11, 23, and 37 with liblinear, L2 regularization, balanced class weights, and max_iter=5000.
+- No external cohort or held-out NDD data was loaded or used.
+- No Random Forest, MLP, BINN, pathway masks, or MSigDB logic was implemented.
