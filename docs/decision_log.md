@@ -76,3 +76,11 @@
 - Applied within-sample gene-wise z-scoring only; no train-fitted scaler was used.
 - No train/validation/test splits, pathway masks, MSigDB logic, baselines, or modeling artifacts were created.
 - External expression values were not used for gene selection, probe selection, fitting, ranking, scaling, or imputation.
+
+## 2026-07-10 — Phase 1 development split creation
+
+- Created stratified 5-fold cross-validation splits from development PD/HC samples only.
+- Held-out NDD samples were checked for overlap but were not used for split creation.
+- External cohort samples were checked for overlap but were not used for split creation.
+- Donor IDs were not available in the processed metadata inputs, so GSM accession was used as the conservative subject identifier for split integrity.
+- No modeling, baselines, training, pathway masks, MSigDB logic, or external-validation model selection artifacts were created.
