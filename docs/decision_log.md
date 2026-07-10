@@ -101,3 +101,10 @@
 - Used seeds 11, 23, and 37 with liblinear, L2 regularization, balanced class weights, and max_iter=5000.
 - No external cohort or held-out NDD data was loaded or used.
 - No Random Forest, MLP, BINN, pathway masks, or MSigDB logic was implemented.
+
+## 2026-07-10 — Phase 2 development-only Random Forest baseline
+
+- Evaluated a Random Forest baseline using only `dev_X.npy`, `dev_y.npy`, and the predefined development folds.
+- Used seeds 11, 23, and 37 with 500 trees, `max_features="sqrt"`, and `class_weight="balanced_subsample"`.
+- No external cohort or held-out NDD data was loaded or used.
+- No MLP, BINN, pathway masks, or MSigDB logic was implemented.
