@@ -124,3 +124,12 @@
 - For each model and seed, pooled OOF predictions across the five validation folds before computing seed-level metrics; reported means are across those seed-level metrics.
 - Used 2,000 deterministic paired, class-stratified bootstrap resamples of pooled seed-level OOF prediction rows within model (`random_state=20260710`) for 95% CIs.
 - No external cohort or held-out NDD data was loaded or used. No BINN, pathway masks, or MSigDB logic was implemented or used.
+
+## 2026-07-10 — Phase 2 final gate audit
+
+- Audited only the existing Phase 2 development baseline output CSVs.
+- Confirmed the exact required model set, summary metric mean/CI columns, three-seed OOF coverage, finite bounded probabilities, and the AUROC sanity gate.
+- Recorded `logistic_regression` as the best development-only baseline by mean OOF AUROC.
+- No external cohort or held-out NDD data was loaded or used.
+- No modeling, BINN, pathway masks, or MSigDB logic was implemented or used.
+- This gate result is not an external-validation result or final performance claim.
