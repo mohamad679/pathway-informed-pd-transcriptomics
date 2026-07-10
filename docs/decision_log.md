@@ -219,3 +219,11 @@
 - The production limitation remains: 50 permutations only, minimum attainable p-value is `1/51 = 0.019608`, and this result cannot support `p < 0.01`.
 - No training, retraining, permutation rerun, bootstrap rerun, model freezing, external cohort, or held-out NDD data was used inside this gate.
 - This is development-only statistical-artifact integrity auditing, not final validation and not a biological claim.
+
+## 2026-07-10 - Phase 6 pre-external frozen BINN bundle
+
+- Selected the full-development epoch count using only the 15 Phase 3 development CV `best_epoch` values.
+- Retrained the fixed-architecture pathway-constrained BINN once on full development data with seed 11.
+- Fit the frozen `StandardScaler` on full development only and wrote the immutable frozen payload files plus `HASH_BEFORE.txt`.
+- External and NDD files were not loaded, and the external cohort has not yet been scored.
+- This is pre-score bundle freezing only, not external-validation performance.

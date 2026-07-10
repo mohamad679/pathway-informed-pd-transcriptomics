@@ -1,0 +1,23 @@
+{
+  "batch_size": 64,
+  "dropout": 0.25,
+  "hidden_dim": 64,
+  "learning_rate": 0.001,
+  "loss": "BCEWithLogitsLoss",
+  "max_abs_masked_weight_after_training": 0.0,
+  "metric_based_tuning": "none",
+  "model": "pathway_constrained_binn",
+  "n_development_samples": 438,
+  "n_epochs": 16,
+  "n_genes": 13908,
+  "n_masked_weights": 17963247,
+  "n_pathways": 1297,
+  "n_unmasked_weights": 75429,
+  "optimizer": "Adam",
+  "parameter_count": 18123110,
+  "scaler_fit_scope": "full_development_only",
+  "seed": 11,
+  "training_scope": "full_development_only",
+  "validation_set": "none",
+  "weight_decay": 0.0001
+}
