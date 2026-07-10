@@ -184,3 +184,12 @@
 - Wrote seed/fold agreement, global stability agreement, and RNA-processing-flagged tier summaries from development results only.
 - No external cohort or held-out NDD data is loaded or used; this is not final validation and not a biological claim.
 - Attention, permutation testing, final validation, and later-phase logic are excluded.
+
+## 2026-07-10 - Phase 4 final gate audit
+
+- Audited only existing Phase 4 development activation, Integrated Gradients, and agreement artifacts.
+- Confirmed exact seed/fold/pathway coverage, rank coverage, finite scores, stability fields, and agreement bounds.
+- Mean seed/fold Spearman: `0.808936`; global Spearman: `0.933899`; global top-20 overlap: `12`.
+- No training/retraining, activation attribution, Integrated Gradients attribution, final validation, attention, or permutation testing was run inside this gate.
+- No external cohort or held-out NDD data was used.
+- This is development-only artifact integrity auditing, not a biological claim and not final performance.
