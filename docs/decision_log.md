@@ -244,3 +244,9 @@
 - NDD artifact: `48` rows; fraction predicted PD at 0.5 `0.520833`; this remains a specificity/stress test only.
 - No retraining, preprocessing refit, inference/rescoring, threshold tuning, or external-metric model selection occurred inside the gate.
 - PASS means chain-of-custody and artifact integrity only; it does not mean clinical validation, deployment readiness, or acceptable calibration and supports no clinical, diagnostic, deployment, or biological claim.
+
+## 2026-07-10 - Phase 7 limitations write-up
+
+- Phase 7 limitations were written before the final README.
+- Negative external calibration and threshold results were retained explicitly.
+- No new computation or result modification occurred.
