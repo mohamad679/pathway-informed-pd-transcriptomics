@@ -116,3 +116,11 @@
 - Used seeds 11, 23, and 37 with one 128-unit ReLU hidden layer and the predefined Adam/early-stopping configuration.
 - No external cohort or held-out NDD data was loaded or used.
 - This is an unconstrained baseline, not BINN or pathway-informed; no pathway masks or MSigDB logic was implemented.
+
+## 2026-07-10 — Phase 2 development-only baseline OOF comparison and bootstrap CI
+
+- Re-ran only the completed Logistic Regression, Random Forest, and unconstrained MLP baselines using `dev_X.npy`, `dev_y.npy`, and predefined development folds.
+- Exported one out-of-fold probability per validation sample, seed, and fold to support sample-level uncertainty estimation without changing the committed per-fold baseline metric CSVs.
+- For each model and seed, pooled OOF predictions across the five validation folds before computing seed-level metrics; reported means are across those seed-level metrics.
+- Used 2,000 deterministic paired, class-stratified bootstrap resamples of pooled seed-level OOF prediction rows within model (`random_state=20260710`) for 95% CIs.
+- No external cohort or held-out NDD data was loaded or used. No BINN, pathway masks, or MSigDB logic was implemented or used.
