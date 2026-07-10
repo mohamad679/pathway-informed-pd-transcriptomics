@@ -59,3 +59,10 @@
 - Parsed platform annotation metadata only to build probe-to-symbol tables.
 - No GEO series expression matrix was read.
 - No labels, splits, processed expression matrices, or modeling artifacts were created.
+
+## 2026-07-10 — Phase 1 annotation-only cross-platform gene-space construction
+
+- Built the shared gene space from `GPL570` and `GPL96` probe-to-symbol annotation tables only.
+- No GEO series expression matrix was read.
+- No numeric expression values were parsed.
+- No labels, splits, processed expression matrices, or modeling artifacts were created.
