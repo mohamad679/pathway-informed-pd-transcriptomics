@@ -177,3 +177,10 @@
 - Uses train-only scaling, validation-partition pathway activations, and zero-baseline Integrated Gradients through the downstream pathway head; it is not model selection, final validation, or external validation.
 - No external cohort or held-out NDD data is loaded or used; no biological claims are made.
 - Attention, permutation testing, activation-attribution outputs, and later-phase logic are excluded.
+
+## 2026-07-10 - Phase 4 activation-vs-Integrated-Gradients agreement
+
+- Compared existing development-only activation and Integrated Gradients attribution CSVs without retraining models.
+- Wrote seed/fold agreement, global stability agreement, and RNA-processing-flagged tier summaries from development results only.
+- No external cohort or held-out NDD data is loaded or used; this is not final validation and not a biological claim.
+- Attention, permutation testing, final validation, and later-phase logic are excluded.
