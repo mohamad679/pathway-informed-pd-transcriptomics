@@ -108,3 +108,11 @@
 - Used seeds 11, 23, and 37 with 500 trees, `max_features="sqrt"`, and `class_weight="balanced_subsample"`.
 - No external cohort or held-out NDD data was loaded or used.
 - No MLP, BINN, pathway masks, or MSigDB logic was implemented.
+
+## 2026-07-10 — Phase 2 development-only unconstrained MLP baseline
+
+- Evaluated an unconstrained MLP baseline using only `dev_X.npy`, `dev_y.npy`, and the predefined development folds.
+- Used `StandardScaler` inside a newly fitted sklearn pipeline for every training fold; no validation-fold information was used to fit the scaler.
+- Used seeds 11, 23, and 37 with one 128-unit ReLU hidden layer and the predefined Adam/early-stopping configuration.
+- No external cohort or held-out NDD data was loaded or used.
+- This is an unconstrained baseline, not BINN or pathway-informed; no pathway masks or MSigDB logic was implemented.
